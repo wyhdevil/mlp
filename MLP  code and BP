@@ -84,3 +84,49 @@ perceptron = MultiPerceptron()
 perceptron.fit(x,y)
 visualize2d(perceptron,x,label,draw_background=True)
 print("Acc: {:8.6} %".format((perceptron.predict(x) == label).mean()*100))
+
+
+
+
+
+
+BP   algorithm   code 
+def backpropagation(self, X, Y):
+        '''
+        Implementation of the Backpropagation algorithm with regularization
+        '''
+        if self.act_f == 'sigmoid':
+            g_dz = lambda x: self.sigmoid_derivative(x)
+        elif self.act_f == 'relu':
+            g_dz = lambda x: self.relu_derivative(x)
+
+        n_examples = X.shape[0]
+        # Feedforward
+        A, Z = self.feedforward(X)
+
+        # Backpropagation
+        deltas = [None] * self.n_layers
+        deltas[-1] = A[-1] - Y
+        # For the second last layer to the second one
+        for ix_layer in np.arange(self.n_layers - 1 - 1 , 0 , -1):
+            theta_tmp = self.theta_weights[ix_layer]
+            if self.bias_flag:
+                # Removing weights for bias
+                theta_tmp = np.delete(theta_tmp, np.s_[0], 1)
+            deltas[ix_layer] = (np.matmul(theta_tmp.transpose(), deltas[ix_layer + 1].transpose() ) ).transpose() * g_dz(Z[ix_layer])
+
+        # Compute gradients
+        gradients = [None] * (self.n_layers - 1)
+        for ix_layer in range(self.n_layers - 1):
+            grads_tmp=np.matmul(deltas[ix_layer +1].transpose() , A[ix_layer])
+            grads_tmp = grads_tmp/n_examples
+            if self.bias_flag:
+                # Regularize weights, except for bias weigths
+                grads_tmp[:,1:]=grads_tmp[:,1:]+ (self.lambda_r/ n_examples) * self.theta_weights[ix_layer][:,1:]
+            else:
+                # Regularize ALL weights
+                grads_tmp = grads_tmp + (self.lambda_r/n_examples) * self.theta_weights[ix_layer]       
+            gradients[ix_layer] = grads_tmp;
+        return gradients
+
+
